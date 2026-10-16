@@ -40,6 +40,7 @@ SI DOUTE : arrête-toi et réponds par un bloc QUESTION. Ne devine jamais.
 ```
 
 - La `description` de l'appel `Agent` est **la mission en 3 à 6 mots lisibles** : c'est ce qu'affiche le panneau des sous-agents.
+- **3 à 7 ÉTAPES, numérotées, chacune avec un titre court** : l'exécutant annonce chacune (`echo "ETAPE n/N titre"`), et le panneau en fait la barre de progression de la mission.
 - Missions indépendantes → lance-les en parallèle. Missions qui touchent les mêmes fichiers → l'une après l'autre.
 - Un compte rendu est **une déclaration, pas une preuve** : relance toi-même le test (ou un lecteur) avant de dire que c'est fait.
 

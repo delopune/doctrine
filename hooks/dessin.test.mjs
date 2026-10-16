@@ -42,10 +42,10 @@ test('svgTableau : chrono', () => {
   assert.ok(svgTableau(un()).includes('3:12'))
 })
 
-test('svgTableau : couleur de barre selon le temps', () => {
-  assert.ok(svgTableau(un({ ms: 60000 })).includes('#97C459'))
-  assert.ok(svgTableau(un({ ms: 300000 })).includes('#EF9F27'))
-  assert.ok(svgTableau(un({ ms: 900000 })).includes('#F09595'))
+test('svgTableau : couleur du texte du chrono selon le temps', () => {
+  assert.match(svgTableau(un({ ms: 60000 })), /fill="#97C459"[^>]*text-anchor="end"[^>]*>1:00</)
+  assert.match(svgTableau(un({ ms: 300000 })), /fill="#EF9F27"[^>]*text-anchor="end"[^>]*>5:00</)
+  assert.match(svgTableau(un({ ms: 900000 })), /fill="#F09595"[^>]*text-anchor="end"[^>]*>15:00</)
 })
 
 test('svgTableau : sans actif, message dédié', () => {
@@ -58,4 +58,28 @@ test('svgTableau : mission longue coupée à 38 caractères + …', () => {
   const s = svgTableau(un({ mission: longue }))
   assert.ok(s.includes('x'.repeat(38) + '…'))
   assert.ok(!s.includes('x'.repeat(39)))
+})
+
+test('svgTableau : étape affichée et barre de progression proportionnelle', () => {
+  const s = svgTableau(un({ etape: { n: 3, total: 5, titre: 'Écrire le test' } }))
+  assert.ok(s.includes('Étape 3/5 · Écrire le test'))
+  assert.ok(s.includes('width="134"'))
+})
+
+test('svgTableau : sans étape, Étape — et pas de barre remplie', () => {
+  const s = svgTableau(un({ etape: null }))
+  assert.ok(s.includes('Étape —'))
+  assert.ok(!s.includes('fill="#FFFFFF"/>'))
+})
+
+test('svgTableau : titre d étape de 60 caractères coupé à 40 + …', () => {
+  const s = svgTableau(un({ etape: { n: 2, total: 5, titre: 'y'.repeat(60) } }))
+  assert.ok(s.includes('y'.repeat(40) + '…'))
+  assert.ok(!s.includes('y'.repeat(41)))
+})
+
+test('svgTableau : titre d étape échappé', () => {
+  const s = svgTableau(un({ etape: { n: 2, total: 5, titre: '<b>' } }))
+  assert.ok(s.includes('&lt;b&gt;'))
+  assert.ok(!s.includes('<b>'))
 })

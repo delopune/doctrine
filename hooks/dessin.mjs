@@ -1,6 +1,5 @@
 import { formatChrono } from './lignes.mjs'
 
-const ECHELLE_MS = 600000
 const POLICE = 'system-ui, sans-serif'
 
 function esc(s) {
@@ -14,6 +13,15 @@ function esc(s) {
 
 function coupe(mission) {
   return mission.length > 38 ? mission.slice(0, 38) + '…' : mission
+}
+
+function coupeTitre(titre) {
+  return titre.length > 40 ? titre.slice(0, 40) + '…' : titre
+}
+
+export function texteEtape(etape) {
+  if (!etape) return 'Étape —'
+  return 'Étape ' + etape.n + '/' + etape.total + (etape.titre ? ' · ' + coupeTitre(etape.titre) : '')
 }
 
 export function libelleType(type) {
@@ -61,15 +69,18 @@ export function svgTableau({ actifs, recents, compteurs }) {
   let y = 76
   for (const a of actifs) {
     const st = stylePhase(a.phase)
-    const largeur = 336 * Math.min(a.ms / ECHELLE_MS, 1)
-    out.push(`<rect x="0" y="${y}" width="360" height="74" rx="10" fill="${st.fond}"/>`)
+    out.push(`<rect x="0" y="${y}" width="360" height="92" rx="10" fill="${st.fond}"/>`)
     out.push(texte(12, y + 20, { taille: 11, fill: st.couleurLibelle, poids: 500 }, esc(libelleType(a.type) + ' · ' + st.nom)))
-    out.push(texte(348, y + 24, { taille: 18, fill: '#FFFFFF', poids: 500, ancre: 'end' }, esc(formatChrono(a.ms))))
+    out.push(texte(348, y + 24, { taille: 18, fill: couleurChrono(a.ms), poids: 500, ancre: 'end' }, esc(formatChrono(a.ms))))
     out.push(texte(12, y + 46, { taille: 15, fill: '#FFFFFF', poids: 500 }, esc(coupe(a.mission))))
-    out.push(`<rect x="12" y="${y + 58}" width="336" height="6" rx="3" fill="#FFFFFF" fill-opacity="0.25"/>`)
-    out.push(`<rect x="12" y="${y + 58}" width="${largeur}" height="6" rx="3" fill="${couleurChrono(a.ms)}"/>`)
-    bas = y + 74
-    y += 82
+    out.push(texte(12, y + 66, { taille: 12, fill: st.couleurLibelle }, esc(texteEtape(a.etape))))
+    out.push(`<rect x="12" y="${y + 76}" width="336" height="6" rx="3" fill="#FFFFFF" fill-opacity="0.25"/>`)
+    if (a.etape && a.etape.n > 1) {
+      const largeurEtape = Math.round(336 * (a.etape.n - 1) / a.etape.total)
+      out.push(`<rect x="12" y="${y + 76}" width="${largeurEtape}" height="6" rx="3" fill="#FFFFFF"/>`)
+    }
+    bas = y + 92
+    y += 100
   }
 
   if (actifs.length === 0) {
