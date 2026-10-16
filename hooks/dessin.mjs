@@ -16,12 +16,17 @@ function coupe(mission) {
   return mission.length > 38 ? mission.slice(0, 38) + '…' : mission
 }
 
-export function styleType(type) {
+export function libelleType(type) {
   const t = String(type ?? '')
-  if (t.includes('executant')) return { fond: '#0F6E56', libelle: 'EXÉCUTANT', couleurLibelle: '#9FE1CB' }
-  if (t.includes('lecteur')) return { fond: '#185FA5', libelle: 'LECTEUR', couleurLibelle: '#B5D4F4' }
-  if (t.includes('Explore') || t.includes('Plan')) return { fond: '#534AB7', libelle: t.toUpperCase(), couleurLibelle: '#CECBF6' }
-  return { fond: '#5F5E5A', libelle: t.toUpperCase(), couleurLibelle: '#D3D1C7' }
+  if (t.includes('executant')) return 'EXÉCUTANT'
+  if (t.includes('lecteur')) return 'LECTEUR'
+  return t.toUpperCase()
+}
+
+export function stylePhase(phase) {
+  if (phase === 'test') return { fond: '#3B6D11', couleurLibelle: '#C0DD97', nom: 'TEST' }
+  if (phase === 'echec') return { fond: '#A32D2D', couleurLibelle: '#F7C1C1', nom: 'ÉCHEC DU TEST' }
+  return { fond: '#185FA5', couleurLibelle: '#B5D4F4', nom: 'CODE' }
 }
 
 export function couleurChrono(ms) {
@@ -55,10 +60,10 @@ export function svgTableau({ actifs, recents, compteurs }) {
   let bas = 64
   let y = 76
   for (const a of actifs) {
-    const st = styleType(a.type)
+    const st = stylePhase(a.phase)
     const largeur = 336 * Math.min(a.ms / ECHELLE_MS, 1)
     out.push(`<rect x="0" y="${y}" width="360" height="74" rx="10" fill="${st.fond}"/>`)
-    out.push(texte(12, y + 20, { taille: 11, fill: st.couleurLibelle, poids: 500 }, esc(st.libelle)))
+    out.push(texte(12, y + 20, { taille: 11, fill: st.couleurLibelle, poids: 500 }, esc(libelleType(a.type) + ' · ' + st.nom)))
     out.push(texte(348, y + 24, { taille: 18, fill: '#FFFFFF', poids: 500, ancre: 'end' }, esc(formatChrono(a.ms))))
     out.push(texte(12, y + 46, { taille: 15, fill: '#FFFFFF', poids: 500 }, esc(coupe(a.mission))))
     out.push(`<rect x="12" y="${y + 58}" width="336" height="6" rx="3" fill="#FFFFFF" fill-opacity="0.25"/>`)

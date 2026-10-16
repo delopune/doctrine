@@ -1,8 +1,10 @@
 import { majVus, lignes, compteurs } from './lignes.mjs'
-import { svgTableau, styleType, couleurChrono } from './dessin.mjs'
+import { svgTableau, libelleType, stylePhase, couleurChrono } from './dessin.mjs'
+import { phaseAvant, echoue } from './phases.mjs'
 
 const PANE = 'sous-agents'
 const vus = new Map()
+const phases = new Map()
 let agents = []
 let timer = null
 let avaitDesActifs = false
@@ -33,10 +35,23 @@ export function register(on) {
     return {}
   })
 
+  on('tool.call', async ($, e, next) => {
+    let p = null
+    try {
+      if (e.agentId) p = phaseAvant(e)
+      if (p) { phases.set(e.agentId, p); $.ui.invalidate('ui.render') }
+    } catch (err) { p = null }
+    const r = await next(e)
+    try {
+      if (p === 'test' && echoue(r)) { phases.set(e.agentId, 'echec'); $.ui.invalidate('ui.render') }
+    } catch (err) {}
+    return r
+  }).catch(($, e, next) => next(e))
+
   on('ui.render', { component: 'Pane' }, async ($, e, next) => {
     if (e.requestId !== PANE) return next(e)
     const now = await $.clock.now()
-    const { actifs, recents } = lignes(agents, vus, now)
+    const { actifs, recents } = lignes(agents, vus, now, phases)
     const c = compteurs(agents)
     if (e.surface !== 'terminal') {
       const { Svg } = $.ui.resolve(e)
@@ -48,9 +63,9 @@ export function register(on) {
       enfants.push(Text({ key: 'vide', dimColor: true, children: ['Aucun sous-agent en cours.'] }))
     } else {
       for (const a of actifs) {
-        const style = styleType(a.type)
+        const style = stylePhase(a.phase)
         enfants.push(Box({ key: 'a-' + a.id, borderStyle: 'round', flexDirection: 'column', children: [
-          Text({ key: 't', color: style.couleurLibelle, bold: true, children: [style.libelle] }),
+          Text({ key: 't', color: style.couleurLibelle, bold: true, children: [libelleType(a.type) + ' · ' + style.nom] }),
           Text({ key: 'm', children: [a.mission] }),
           Text({ key: 'd', color: couleurChrono(a.ms), children: ['⏱ ' + a.duree] }),
         ] }))

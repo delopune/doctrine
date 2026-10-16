@@ -20,11 +20,26 @@ test('svgTableau : échappe la mission', () => {
   assert.ok(!s.includes('<le>'))
 })
 
-test('svgTableau : libellé, couleur de fond et chrono', () => {
-  const s = svgTableau(un())
-  assert.ok(s.includes('EXÉCUTANT'))
-  assert.ok(s.includes('#0F6E56'))
-  assert.ok(s.includes('3:12'))
+test('svgTableau : couleur de fond selon la phase (code)', () => {
+  assert.ok(svgTableau(un({ phase: 'code' })).includes('#185FA5'))
+})
+
+test('svgTableau : couleur de fond selon la phase (test)', () => {
+  assert.ok(svgTableau(un({ phase: 'test' })).includes('#3B6D11'))
+})
+
+test('svgTableau : couleur de fond selon la phase (échec)', () => {
+  assert.ok(svgTableau(un({ phase: 'echec' })).includes('#A32D2D'))
+})
+
+test('svgTableau : libellé type · phase', () => {
+  assert.ok(svgTableau(un({ phase: 'code' })).includes('EXÉCUTANT · CODE'))
+  assert.ok(svgTableau(un({ phase: 'test' })).includes('EXÉCUTANT · TEST'))
+  assert.ok(svgTableau(un({ phase: 'echec' })).includes('EXÉCUTANT · ÉCHEC DU TEST'))
+})
+
+test('svgTableau : chrono', () => {
+  assert.ok(svgTableau(un()).includes('3:12'))
 })
 
 test('svgTableau : couleur de barre selon le temps', () => {
