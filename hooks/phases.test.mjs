@@ -52,6 +52,18 @@ test('etapeDe : annonce ETAPE n/total titre', () => {
   assert.deepEqual(etapeDe('echo ETAPE 4/4'), { n: 4, total: 4, titre: '' })
 })
 
+test('etapeDe : le titre s arrête avant ; et guillemet fermant', () => {
+  assert.deepEqual(etapeDe('echo "ETAPE 1/5 Installer"; cd "/d/x"'), { n: 1, total: 5, titre: 'Installer' })
+})
+
+test('etapeDe : le titre s arrête avant && et apostrophe fermante', () => {
+  assert.deepEqual(etapeDe("echo 'ETAPE 2/4 Lire' && ls"), { n: 2, total: 4, titre: 'Lire' })
+})
+
+test('etapeDe : le titre s arrête avant le pipe', () => {
+  assert.deepEqual(etapeDe('echo ETAPE 3/3 Fin | tee x'), { n: 3, total: 3, titre: 'Fin' })
+})
+
 test('etapeDe : hors annonce ou hors bornes → null', () => {
   assert.equal(etapeDe('ls -la'), null)
   assert.equal(etapeDe(undefined), null)

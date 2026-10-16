@@ -47,7 +47,7 @@ function enteteRoute($, route, ui, terminal) {
       ? Text({ key: 'c-' + ch.id, bold: true, color: couleur, dimColor: ch.fait, children: [(ch.fait ? '✓ ' : '') + ch.id + '. ' + ch.titre + '  ' + ch.nbFait + '/' + ch.nb] })
       : Svg({ key: 'c-' + ch.id, source: svgChapitre(ch), alt: ch.id + '. ' + ch.titre })
     enfants.push(Box({ key: 'ch-' + ch.id, flexDirection: 'row', alignItems: 'center', gap: 1, children: [
-      Button({ key: 'b-' + ch.id, label: ouverts.has(ch.id) ? '▾' : '▸', onPress: () => { if (ouverts.has(ch.id)) ouverts.delete(ch.id); else ouverts.add(ch.id); $.ui.invalidate('ui.render') } }),
+      Button({ key: 'b-' + ch.id, plain: true, label:ouverts.has(ch.id) ? '▾' : '▸', onPress: () => { if (ouverts.has(ch.id)) ouverts.delete(ch.id); else ouverts.add(ch.id); $.ui.invalidate('ui.render') } }),
       titreCh,
     ] }))
     if (!ouverts.has(ch.id)) continue

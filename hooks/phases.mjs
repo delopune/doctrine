@@ -7,7 +7,7 @@ export function phaseAvant(e) {
 // ponytail: step announcement read from the echoed command; add a format when a project announces differently
 export function etapeDe(commande) {
   if (typeof commande !== 'string') return null
-  const m = /ETAPE\s+(\d+)\s*\/\s*(\d+)\s*(.*)$/.exec(commande)
+  const m = /ETAPE\s+(\d+)\s*\/\s*(\d+)\s*([^"';|&\r\n]*)/.exec(commande)
   if (!m) return null
   const n = Number(m[1])
   const total = Number(m[2])
