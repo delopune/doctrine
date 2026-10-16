@@ -1,7 +1,7 @@
 {
   "name": "doctrine",
   "displayName": "Doctrine",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Chef d'orchestre Opus qui décide, exécutants Haiku qui codent, garde-fous et panneau des sous-agents.",
   "author": { "name": "delopune", "url": "https://github.com/delopune" },
   "repository": "https://github.com/delopune/doctrine",
