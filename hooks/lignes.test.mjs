@@ -26,7 +26,7 @@ test('lignes : durée d un actif depuis sa première vue', () => {
   const vus = new Map([['a1', 1000]])
   const agents = [{ id: 'a1', type: 'doctrine:executant', description: 'X', status: 'running' }]
   const { actifs } = lignes(agents, vus, 6000)
-  assert.deepEqual(actifs, [{ id: 'a1', type: 'doctrine:executant', mission: 'X', duree: '5 s', ms: 5000 }])
+  assert.deepEqual(actifs, [{ id: 'a1', type: 'doctrine:executant', mission: 'X', duree: '5 s', ms: 5000, phase: 'code' }])
 })
 
 test('lignes : chaque actif porte ms = now - vu', () => {
@@ -35,6 +35,25 @@ test('lignes : chaque actif porte ms = now - vu', () => {
   const { actifs } = lignes(agents, vus, 6000)
   assert.equal(typeof actifs[0].ms, 'number')
   assert.equal(actifs[0].ms, 5000)
+})
+
+test('lignes : phase lue dans la Map, code par défaut', () => {
+  const vus = new Map([['a1', 0], ['a2', 0]])
+  const agents = [
+    { id: 'a1', type: 't', status: 'running' },
+    { id: 'a2', type: 't', status: 'running' },
+  ]
+  const phases = new Map([['a1', 'test']])
+  const { actifs } = lignes(agents, vus, 0, phases)
+  assert.equal(actifs[0].phase, 'test')
+  assert.equal(actifs[1].phase, 'code')
+})
+
+test('lignes : sans 4e argument, phase = code', () => {
+  const vus = new Map([['a1', 0]])
+  const agents = [{ id: 'a1', type: 't', status: 'running' }]
+  const { actifs } = lignes(agents, vus, 0)
+  assert.equal(actifs[0].phase, 'code')
 })
 
 test('formatChrono', () => {

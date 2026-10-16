@@ -34,7 +34,7 @@ export function compteurs(agents) {
 
 const STATUTS = { completed: 'terminé', failed: 'échec', killed: 'arrêté' }
 
-export function lignes(agents, vus, now) {
+export function lignes(agents, vus, now, phases) {
   const actifs = agents
     .filter(a => ACTIFS.includes(a.status))
     .map(a => ({
@@ -43,6 +43,7 @@ export function lignes(agents, vus, now) {
       mission: a.description || a.name || '(sans mission)',
       duree: formatDuree(now - (vus.get(a.id) ?? now)),
       ms: now - (vus.get(a.id) ?? now),
+      phase: (phases && phases.get(a.id)) || 'code',
     }))
   const recents = agents
     .filter(a => !ACTIFS.includes(a.status))
