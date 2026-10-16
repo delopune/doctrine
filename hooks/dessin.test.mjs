@@ -51,19 +51,37 @@ test('svgTableau : couleur du texte du chrono selon le temps', () => {
 test('svgTableau : sans actif, message dédié', () => {
   const s = svgTableau({ actifs: [], recents: [], compteurs: { enCours: 0, termines: 0, echecs: 0 } })
   assert.ok(s.includes('Aucun sous-agent en cours.'))
+  assert.match(s, /y="44"[^>]*>Aucun sous-agent en cours\./)
 })
 
-test('svgTableau : mission longue coupée à 38 caractères + …', () => {
+test('svgTableau : mission longue coupée à 42 caractères + …', () => {
   const longue = 'x'.repeat(60)
   const s = svgTableau(un({ mission: longue }))
-  assert.ok(s.includes('x'.repeat(38) + '…'))
-  assert.ok(!s.includes('x'.repeat(39)))
+  assert.ok(s.includes('x'.repeat(42) + '…'))
+  assert.ok(!s.includes('x'.repeat(43)))
 })
 
 test('svgTableau : étape affichée et barre de progression proportionnelle', () => {
   const s = svgTableau(un({ etape: { n: 3, total: 5, titre: 'Écrire le test' } }))
   assert.ok(s.includes('Étape 3/5 · Écrire le test'))
-  assert.ok(s.includes('width="134"'))
+  assert.ok(s.includes('y="88" width="134" height="4" rx="2"'))
+})
+
+test('svgTableau : ligne de compteurs en tête (en cours, terminés, échecs)', () => {
+  const s = svgTableau({ actifs: [], recents: [], compteurs: { enCours: 2, termines: 5, echecs: 1 } })
+  assert.match(s, /<text x="0" y="14" font-size="13" fill="#888780"/)
+  assert.ok(s.includes('<tspan fill="#1D9E75" font-weight="500">2</tspan> en cours · '))
+  assert.ok(s.includes('<tspan font-weight="500">5</tspan> terminés · '))
+  assert.ok(s.includes('<tspan fill="#E24B4A" font-weight="500">1</tspan> échecs</text>'))
+})
+
+test('svgTableau : première carte à y 26, textes relatifs au haut de la carte', () => {
+  const s = svgTableau(un({ phase: 'code', etape: { n: 3, total: 5, titre: 'Écrire le test' } }))
+  assert.ok(s.includes('<rect x="0" y="26" width="360" height="72" rx="8"'))
+  assert.match(s, /<text x="12" y="44" font-size="10"/)
+  assert.match(s, /<text x="348" y="46" font-size="14"/)
+  assert.match(s, /<text x="12" y="64" font-size="13"/)
+  assert.match(s, /<text x="12" y="80" font-size="11"/)
 })
 
 test('svgTableau : sans étape, Étape — et pas de barre remplie', () => {
