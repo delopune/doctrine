@@ -1,0 +1,12 @@
+{
+  "name": "delopune",
+  "description": "Plugins Claude Code de delopune.",
+  "owner": { "name": "delopune", "url": "https://github.com/delopune" },
+  "plugins": [
+    {
+      "name": "doctrine",
+      "description": "Chef d'orchestre Opus qui décide, exécutants Haiku qui codent, garde-fous et panneau des sous-agents.",
+      "source": "./"
+    }
+  ]
+}

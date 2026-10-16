@@ -1,0 +1,31 @@
+{
+  "description": "Doctrine : injection au démarrage, garde-fou du chef d'orchestre, panneau des sous-agents",
+  "modules": ["./panneau.mjs"],
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"process.stdout.write(require('fs').readFileSync(process.argv[1],'utf8'))\" \"${CLAUDE_PLUGIN_ROOT}/doctrine.md\"",
+            "timeout": 5,
+            "statusMessage": "Chargement de la doctrine..."
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|NotebookEdit|Read|Agent|Task",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/garde.cjs\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}
