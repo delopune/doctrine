@@ -4,8 +4,21 @@ export function phaseAvant(e) {
   return null
 }
 
+// ponytail: step announcement read from the echoed command; add a format when a project announces differently
+export function etapeDe(commande) {
+  if (typeof commande !== 'string') return null
+  const m = /ETAPE\s+(\d+)\s*\/\s*(\d+)\s*(.*)$/.exec(commande)
+  if (!m) return null
+  const n = Number(m[1])
+  const total = Number(m[2])
+  if (!(n >= 1 && n <= total)) return null
+  const titre = m[3].trim().replace(/^["']+|["']+$/g, '').trim()
+  return { n, total, titre }
+}
+
 // ponytail: test detection by command pattern; add a pattern when a project uses another runner
 export function estTest(commande) {
+  if (etapeDe(commande) !== null) return false
   return /(node\s+--test|npm\s+(run\s+)?test|pnpm\s+test|yarn\s+test|pytest|-m\s+unittest|vitest|jest|go\s+test|cargo\s+test|verifier\.py|plugin\s+test)/.test(String(commande ?? ''))
 }
 

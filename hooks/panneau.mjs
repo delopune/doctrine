@@ -1,10 +1,11 @@
 import { majVus, lignes, compteurs } from './lignes.mjs'
-import { svgTableau, libelleType, stylePhase, couleurChrono } from './dessin.mjs'
-import { phaseAvant, echoue } from './phases.mjs'
+import { svgTableau, libelleType, stylePhase, couleurChrono, texteEtape } from './dessin.mjs'
+import { phaseAvant, echoue, etapeDe } from './phases.mjs'
 
 const PANE = 'sous-agents'
 const vus = new Map()
 const phases = new Map()
+const etapes = new Map()
 let agents = []
 let timer = null
 let avaitDesActifs = false
@@ -40,6 +41,7 @@ export function register(on) {
     try {
       if (e.agentId) p = phaseAvant(e)
       if (p) { phases.set(e.agentId, p); $.ui.invalidate('ui.render') }
+      if (e.agentId && e.tool === 'Bash') { const et = etapeDe(e.command); if (et) { etapes.set(e.agentId, et); $.ui.invalidate('ui.render') } }
     } catch (err) { p = null }
     const r = await next(e)
     try {
@@ -51,7 +53,7 @@ export function register(on) {
   on('ui.render', { component: 'Pane' }, async ($, e, next) => {
     if (e.requestId !== PANE) return next(e)
     const now = await $.clock.now()
-    const { actifs, recents } = lignes(agents, vus, now, phases)
+    const { actifs, recents } = lignes(agents, vus, now, phases, etapes)
     const c = compteurs(agents)
     if (e.surface !== 'terminal') {
       const { Svg } = $.ui.resolve(e)
@@ -67,6 +69,7 @@ export function register(on) {
         enfants.push(Box({ key: 'a-' + a.id, borderStyle: 'round', flexDirection: 'column', children: [
           Text({ key: 't', color: style.couleurLibelle, bold: true, children: [libelleType(a.type) + ' · ' + style.nom] }),
           Text({ key: 'm', children: [a.mission] }),
+          Text({ key: 'e', color: style.couleurLibelle, children: [texteEtape(a.etape)] }),
           Text({ key: 'd', color: couleurChrono(a.ms), children: ['⏱ ' + a.duree] }),
         ] }))
       }

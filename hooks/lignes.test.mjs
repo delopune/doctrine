@@ -26,7 +26,7 @@ test('lignes : durée d un actif depuis sa première vue', () => {
   const vus = new Map([['a1', 1000]])
   const agents = [{ id: 'a1', type: 'doctrine:executant', description: 'X', status: 'running' }]
   const { actifs } = lignes(agents, vus, 6000)
-  assert.deepEqual(actifs, [{ id: 'a1', type: 'doctrine:executant', mission: 'X', duree: '5 s', ms: 5000, phase: 'code' }])
+  assert.deepEqual(actifs, [{ id: 'a1', type: 'doctrine:executant', mission: 'X', duree: '5 s', ms: 5000, phase: 'code', etape: null }])
 })
 
 test('lignes : chaque actif porte ms = now - vu', () => {
@@ -102,4 +102,23 @@ test('lignes : 7 terminés → 5 récents, le premier est le dernier de la liste
 
 test('ACTIFS', () => {
   assert.deepEqual(ACTIFS, ['pending', 'running', 'waiting', 'idle'])
+})
+
+test('lignes : étape lue dans la Map, null sinon', () => {
+  const vus = new Map([['a1', 0], ['a2', 0]])
+  const agents = [
+    { id: 'a1', type: 't', status: 'running' },
+    { id: 'a2', type: 't', status: 'running' },
+  ]
+  const etapes = new Map([['a1', { n: 2, total: 5, titre: 'x' }]])
+  const { actifs } = lignes(agents, vus, 0, new Map(), etapes)
+  assert.deepEqual(actifs[0].etape, { n: 2, total: 5, titre: 'x' })
+  assert.equal(actifs[1].etape, null)
+})
+
+test('lignes : sans 5e argument, etape = null', () => {
+  const vus = new Map([['a1', 0]])
+  const agents = [{ id: 'a1', type: 't', status: 'running' }]
+  const { actifs } = lignes(agents, vus, 0)
+  assert.equal(actifs[0].etape, null)
 })
