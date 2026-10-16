@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { ACTIFS, majVus, formatDuree, lignes } from './lignes.mjs'
+import { ACTIFS, majVus, formatDuree, lignes, formatChrono, compteurs } from './lignes.mjs'
 
 test('formatDuree', () => {
   assert.equal(formatDuree(0), '0 s')
@@ -26,7 +26,34 @@ test('lignes : durée d un actif depuis sa première vue', () => {
   const vus = new Map([['a1', 1000]])
   const agents = [{ id: 'a1', type: 'doctrine:executant', description: 'X', status: 'running' }]
   const { actifs } = lignes(agents, vus, 6000)
-  assert.deepEqual(actifs, [{ id: 'a1', type: 'doctrine:executant', mission: 'X', duree: '5 s' }])
+  assert.deepEqual(actifs, [{ id: 'a1', type: 'doctrine:executant', mission: 'X', duree: '5 s', ms: 5000 }])
+})
+
+test('lignes : chaque actif porte ms = now - vu', () => {
+  const vus = new Map([['a1', 1000]])
+  const agents = [{ id: 'a1', type: 't', status: 'running' }]
+  const { actifs } = lignes(agents, vus, 6000)
+  assert.equal(typeof actifs[0].ms, 'number')
+  assert.equal(actifs[0].ms, 5000)
+})
+
+test('formatChrono', () => {
+  assert.equal(formatChrono(0), '0:00')
+  assert.equal(formatChrono(24000), '0:24')
+  assert.equal(formatChrono(192000), '3:12')
+  assert.equal(formatChrono(3725000), '1:02:05')
+})
+
+test('compteurs : enCours = actifs, termines = completed, echecs = failed', () => {
+  const agents = [
+    { id: 'a1', status: 'running' },
+    { id: 'a2', status: 'pending' },
+    { id: 'c1', status: 'completed' },
+    { id: 'c2', status: 'completed' },
+    { id: 'f1', status: 'failed' },
+    { id: 'k1', status: 'killed' },
+  ]
+  assert.deepEqual(compteurs(agents), { enCours: 2, termines: 2, echecs: 1 })
 })
 
 test('lignes : mission = name si description absente, sinon "(sans mission)"', () => {
