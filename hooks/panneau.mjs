@@ -1,6 +1,8 @@
 import { majVus, lignes, compteurs } from './lignes.mjs'
 import { svgTableau, libelleType, stylePhase, couleurChrono, texteEtape } from './dessin.mjs'
 import { phaseAvant, echoue, etapeDe } from './phases.mjs'
+import { parseRoute, modeleRoute } from './route.mjs'
+import { svgGlobal, svgChapitre, svgSousEtape, COULEURS } from './dessinRoute.mjs'
 
 const PANE = 'sous-agents'
 const vus = new Map()
@@ -9,8 +11,14 @@ const etapes = new Map()
 let agents = []
 let timer = null
 let avaitDesActifs = false
+let routeTexte = null
+const ouverts = new Set()
+let masquer = false
+// ponytail: sub-step indent in px, tune it on screen if the rows do not line up under the chapter bars
+const DECALAGE = 72
 
 async function tick($) {
+  try { routeTexte = await $.fs.read('feuille-de-route.md') } catch (err) { routeTexte = null }
   agents = await $.agent.list()
   const now = await $.clock.now()
   majVus(vus, agents, now)
@@ -23,11 +31,44 @@ async function tick($) {
   $.ui.invalidate('ui.render')
 }
 
+function enteteRoute($, route, ui, terminal) {
+  const { Box, Button, Svg, Text } = ui
+  const enfants = []
+  if (terminal) {
+    enfants.push(Text({ key: 'route-global', bold: true, children: [route.global.nbFait + '/' + route.global.nb + ' livrées · ' + route.global.pourcent + ' %'] }))
+  } else {
+    enfants.push(Svg({ key: 'route-global', source: svgGlobal(route.global), alt: route.global.nbFait + ' sur ' + route.global.nb + ' étapes livrées' }))
+  }
+  enfants.push(Button({ key: 'route-masquer', label: masquer ? 'Afficher les étapes livrées' : 'Masquer les étapes livrées', onPress: async () => { masquer = !masquer; $.ui.invalidate('ui.render'); await $.store.set('masquer', masquer) } }))
+  for (const ch of route.chapitres) {
+    if (masquer && ch.fait) continue
+    const couleur = ch.phase ? COULEURS[ch.phase] : undefined
+    const titreCh = terminal
+      ? Text({ key: 'c-' + ch.id, bold: true, color: couleur, dimColor: ch.fait, children: [(ch.fait ? '✓ ' : '') + ch.id + '. ' + ch.titre + '  ' + ch.nbFait + '/' + ch.nb] })
+      : Svg({ key: 'c-' + ch.id, source: svgChapitre(ch), alt: ch.id + '. ' + ch.titre })
+    enfants.push(Box({ key: 'ch-' + ch.id, flexDirection: 'row', alignItems: 'center', gap: 1, children: [
+      Button({ key: 'b-' + ch.id, label: ouverts.has(ch.id) ? '▾' : '▸', onPress: () => { if (ouverts.has(ch.id)) ouverts.delete(ch.id); else ouverts.add(ch.id); $.ui.invalidate('ui.render') } }),
+      titreCh,
+    ] }))
+    if (!ouverts.has(ch.id)) continue
+    for (const se of ch.sous) {
+      if (masquer && se.fait) continue
+      const couleurSe = se.phase ? COULEURS[se.phase] : undefined
+      enfants.push(terminal
+        ? Text({ key: 's-' + se.id, color: couleurSe, dimColor: se.fait, children: ['    ' + (se.fait ? '✓ ' : '• ') + se.id + ' ' + se.titre] })
+        : Svg({ key: 's-' + se.id, source: svgSousEtape(se, 286, DECALAGE), alt: se.id + ' ' + se.titre }))
+    }
+  }
+  return Box({ flexDirection: 'column', children: enfants })
+}
+
 export function register(on) {
   on('session.start', async ($, e, next) => {
     await $.command.register({ name: 'sous-agents', description: 'Ouvrir le panneau des sous-agents' })
     if (timer) timer.cancel()
     timer = $.clock.every(1000, () => { tick($).catch(() => {}) })
+    const m = await $.store.get('masquer')
+    masquer = m === true
     return next(e)
   })
 
@@ -55,12 +96,17 @@ export function register(on) {
     const now = await $.clock.now()
     const { actifs, recents } = lignes(agents, vus, now, phases, etapes)
     const c = compteurs(agents)
+    const route = routeTexte === null ? null : modeleRoute(parseRoute(routeTexte), actifs)
+    const ui = $.ui.resolve(e)
     if (e.surface !== 'terminal') {
-      const { Svg } = $.ui.resolve(e)
-      return Svg({ key: 'tableau', source: svgTableau({ actifs, recents, compteurs: c }), alt: c.enCours + ' sous-agents en cours' })
+      const { Svg, Box } = ui
+      const ancien = Svg({ key: 'tableau', source: svgTableau({ actifs, recents, compteurs: c }), alt: c.enCours + ' sous-agents en cours' })
+      if (route === null) return ancien
+      return Box({ flexDirection: 'column', children: [enteteRoute($, route, ui, false), ancien] })
     }
-    const { Box, Text } = $.ui.resolve(e)
-    const enfants = [Text({ key: 'titre', bold: true, children: [c.enCours + ' en cours'] })]
+    const { Box, Text } = ui
+    const enfants = route === null ? [] : [enteteRoute($, route, ui, true)]
+    enfants.push(Text({ key: 'titre', bold: true, children: [c.enCours + ' en cours'] }))
     if (actifs.length === 0) {
       enfants.push(Text({ key: 'vide', dimColor: true, children: ['Aucun sous-agent en cours.'] }))
     } else {

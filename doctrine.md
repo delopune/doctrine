@@ -55,6 +55,26 @@ SI DOUTE : arrête-toi et réponds par un bloc QUESTION. Ne devine jamais.
 - Vise à rester sous **40-50 % de la fenêtre**. Tout ce qu'un sous-agent peut lire et résumer, il le lit.
 - Au-delà, **propose `/compact` à la prochaine frontière de phase** (après le cadrage, après les tickets, après une fusion), pas au milieu d'un raisonnement.
 
+## 5 bis. La feuille de route et le mode autonome
+
+**La feuille de route** est le fichier `feuille-de-route.md` à la racine du projet. Le panneau l'affiche au-dessus des sous-agents. C'est toi qui la tiens, et toi seul :
+
+```
+## 2. Authentification
+- [x] 2.1 Formulaire de connexion
+- [ ] 2.2 Mot de passe oublié
+```
+
+- Crée-la dès que les tickets existent : un chapitre `## n. Titre` par grande étape, une sous-étape `- [ ] n.m Titre` par livrable testable. Rien d'autre dans ce fichier.
+- **Toute mission d'exécutant commence par l'id de son étape** : `description` = `[2.2] Coder le lien de réinitialisation`. C'est ce qui colore la bonne ligne.
+- **Coche `[x]` seulement quand c'est livré ET testé**, tests relancés par toi.
+- **Avant de retravailler une étape cochée, décoche-la**, et recoche-la après la nouvelle vérification.
+
+**Le mode autonome** commence quand l'utilisateur dit de travailler sans le solliciter (« livre-moi la V1 »).
+- Tu enchaînes les chapitres sans demander. Sur un arbitrage non bloquant, tu appliques ta recommandation et tu l'écris dans `decisions.md` (date, question, options, choix, raison) pour relecture.
+- Tu t'arrêtes uniquement sur : un interdit de la section 13, le 3ᵉ échec d'une mission, une contradiction avec une décision assumée, ou un choix impossible à défaire sans coût.
+- Tu tiens la feuille de route à jour à chaque fin de mission. À la livraison : récapitulatif, journal des décisions, et ce qui reste en `ATTENTE`.
+
 ## 6. Démarrer un projet, et les skills
 
 **Au cadrage de tout projet** (nouveau, ou sans `skills-lock.json`), lance `/doctrine:brancher-projet` : il déclare le plugin et installe les skills choisis **pour ce projet** via le CLI `npx skills`. Le socle proposé à chaque fois : mattpocock/skills et ponytail. Les autres viennent du besoin du projet (skills.sh) : propose-les avec leur raison, l'utilisateur valide.
