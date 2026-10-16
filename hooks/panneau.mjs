@@ -3,6 +3,7 @@ import { svgTableau, libelleType, stylePhase, couleurChrono, texteEtape } from '
 import { phaseAvant, echoue, etapeDe } from './phases.mjs'
 import { parseRoute, modeleRoute } from './route.mjs'
 import { svgGlobal, svgChapitre, svgSousEtape, COULEURS } from './dessinRoute.mjs'
+import { svgScene, cleScene } from './scene.mjs'
 
 const PANE = 'sous-agents'
 const vus = new Map()
@@ -12,6 +13,8 @@ let agents = []
 let timer = null
 let avaitDesActifs = false
 let routeTexte = null
+let cleCourante = null
+let sourceScene = ''
 const ouverts = new Set()
 let masquer = false
 // ponytail: sub-step indent in px, tune it on screen if the rows do not line up under the chapter bars
@@ -101,8 +104,11 @@ export function register(on) {
     if (e.surface !== 'terminal') {
       const { Svg, Box } = ui
       const ancien = Svg({ key: 'tableau', source: svgTableau({ actifs, recents, compteurs: c }), alt: c.enCours + ' sous-agents en cours' })
-      if (route === null) return ancien
-      return Box({ flexDirection: 'column', children: [enteteRoute($, route, ui, false), ancien] })
+      const k = cleScene(actifs)
+      if (k !== cleCourante) { cleCourante = k; sourceScene = svgScene(actifs) }
+      const scene = Svg({ key: 'scene', source: sourceScene, alt: 'Bureau des sous-agents', isInteractive: true })
+      if (route === null) return Box({ flexDirection: 'column', children: [scene, ancien] })
+      return Box({ flexDirection: 'column', children: [enteteRoute($, route, ui, false), scene, ancien] })
     }
     const { Box, Text } = ui
     const enfants = route === null ? [] : [enteteRoute($, route, ui, true)]
