@@ -18,6 +18,20 @@ export function formatDuree(ms) {
   return Math.floor(s / 3600) + ' h ' + deuxChiffres(Math.floor((s % 3600) / 60)) + ' min'
 }
 
+export function formatChrono(ms) {
+  const s = Math.max(0, Math.floor(ms / 1000))
+  if (s < 3600) return Math.floor(s / 60) + ':' + deuxChiffres(s % 60)
+  return Math.floor(s / 3600) + ':' + deuxChiffres(Math.floor((s % 3600) / 60)) + ':' + deuxChiffres(s % 60)
+}
+
+export function compteurs(agents) {
+  return {
+    enCours: agents.filter(a => ACTIFS.includes(a.status)).length,
+    termines: agents.filter(a => a.status === 'completed').length,
+    echecs: agents.filter(a => a.status === 'failed').length,
+  }
+}
+
 const STATUTS = { completed: 'terminé', failed: 'échec', killed: 'arrêté' }
 
 export function lignes(agents, vus, now) {
@@ -28,6 +42,7 @@ export function lignes(agents, vus, now) {
       type: a.type,
       mission: a.description || a.name || '(sans mission)',
       duree: formatDuree(now - (vus.get(a.id) ?? now)),
+      ms: now - (vus.get(a.id) ?? now),
     }))
   const recents = agents
     .filter(a => !ACTIFS.includes(a.status))

@@ -1,4 +1,5 @@
-import { majVus, lignes } from './lignes.mjs'
+import { majVus, lignes, compteurs } from './lignes.mjs'
+import { svgTableau, styleType, couleurChrono } from './dessin.mjs'
 
 const PANE = 'sous-agents'
 const vus = new Map()
@@ -34,22 +35,34 @@ export function register(on) {
 
   on('ui.render', { component: 'Pane' }, async ($, e, next) => {
     if (e.requestId !== PANE) return next(e)
-    const { Box, Text } = $.ui.resolve(e)
     const now = await $.clock.now()
     const { actifs, recents } = lignes(agents, vus, now)
-    const enfants = [Text({ key: 'titre', bold: true, children: [actifs.length + ' en cours'] })]
+    const c = compteurs(agents)
+    if (e.surface !== 'terminal') {
+      const { Svg } = $.ui.resolve(e)
+      return Svg({ key: 'tableau', source: svgTableau({ actifs, recents, compteurs: c }), alt: c.enCours + ' sous-agents en cours' })
+    }
+    const { Box, Text } = $.ui.resolve(e)
+    const enfants = [Text({ key: 'titre', bold: true, children: [c.enCours + ' en cours'] })]
     if (actifs.length === 0) {
       enfants.push(Text({ key: 'vide', dimColor: true, children: ['Aucun sous-agent en cours.'] }))
     } else {
       for (const a of actifs) {
-        enfants.push(Text({ key: 'a-' + a.id, children: ['● ' + a.type + ' — ' + a.mission + ' — ' + a.duree] }))
+        const style = styleType(a.type)
+        enfants.push(Box({ key: 'a-' + a.id, borderStyle: 'round', flexDirection: 'column', children: [
+          Text({ key: 't', color: style.couleurLibelle, bold: true, children: [style.libelle] }),
+          Text({ key: 'm', children: [a.mission] }),
+          Text({ key: 'd', color: couleurChrono(a.ms), children: ['⏱ ' + a.duree] }),
+        ] }))
       }
     }
     if (recents.length > 0) {
       enfants.push(Text({ key: 'sep', children: [' '] }))
       enfants.push(Text({ key: 'recents', dimColor: true, children: ['Récents :'] }))
       for (const r of recents) {
-        enfants.push(Text({ key: 'r-' + r.id, dimColor: true, children: ['○ ' + r.type + ' — ' + r.mission + ' — ' + r.statut] }))
+        const props = { key: 'r-' + r.id, dimColor: true, children: ['○ ' + r.type + ' — ' + r.mission + ' — ' + r.statut] }
+        if (r.statut === 'échec') props.color = '#E24B4A'
+        enfants.push(Text(props))
       }
     }
     return Box({ flexDirection: 'column', children: enfants })
